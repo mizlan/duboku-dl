@@ -76,13 +76,11 @@ my $links = $dom->find('#playlist1 a')->map(attr => 'href');
 $DEBUG and say "found:\n", $links->join("\n");
 
 my @episode_links;
-$summary_url =~ m{(.*)/voddetail};
-my $url_head = $1;
+my ( $url_head ) = $summary_url =~ m{(.*)/voddetail};
 $DEBUG and say "url head $url_head";
 
 for my $link (@$links) {
-  $link =~ m{vodplay/$summary_id-1-(\d+)};
-  my $episode_number = $1;
+  my ( $episode_number ) = $link =~ m{vodplay/$summary_id-1-(\d+)};
   if (grep /^$episode_number$/, @episodes) {
     push @episode_links, "$url_head$link";
   }
@@ -91,8 +89,7 @@ for my $link (@$links) {
 $DEBUG and say join("\n", @episode_links);
 
 for my $episode_link (@episode_links) {
-  $episode_link =~ m{vodplay/$summary_id-1-(\d+)};
-  my $episode_number = $1;
+  my ( $episode_number ) = $episode_link =~ m{vodplay/$summary_id-1-(\d+)};
 
   my $request = HTTP::Request->new(GET => $episode_link);
   my $response = $ua->request($request);
@@ -102,13 +99,11 @@ for my $episode_link (@episode_links) {
   my $dom = Mojo::DOM->new($response->decoded_content);
   my $str = $dom->find('script')->grep(sub { $_->text =~ /m3u8/ })->first;
   $DEBUG and say $str;
-  $str =~ /"url":\s*"(\S+?)"/;
-  my $m3u8_url = $1;
+  my ( $m3u8_url ) = $str =~ /"url":\s*"(\S+?)"/;
   $m3u8_url =~ s{\\/}{/}g;
 
-  $m3u8_url =~ m{^(\w+://)?[^/]+};
 
-  my $m3u8_host = $1;
+  my ( $m3u8_host ) = $m3u8_url =~ m{(^(?:\w+://)?[^/]+)};
   $DEBUG and say $m3u8_host;
 
   # duboku's true m3u8 url is just this url with
